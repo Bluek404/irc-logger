@@ -1,4 +1,5 @@
 (ns irc-logger.core
+  (:require [clojure.pprint :as pprint])
   (:require [clojure.string :as string])
   (:require [clojure.data.json :as json])
   (:require [clojure.core.async :as async :refer [<!! >!! chan]])
@@ -33,7 +34,6 @@
                  :text    "加入了聊天室"}))
 
 (defn log-kick [connection args]
-  (println args)
   (let [params (args :params)]
     (jdbc/insert! db
                   (gen-table-name (@connection :network) (first params))
@@ -48,7 +48,6 @@
                                    ""))})))
 
 (defn log-nick [connection args]
-  (println args)
   (let [server   (@connection :network)
         new-nick (first (args :params))
         data     {:command "NICK"
@@ -79,7 +78,6 @@
                                                   ""))})))
 
 (defn log-quit [connection args]
-  (println args)
   (let [server (@connection :network)
         params (args :params)
         data   {:command "QUIT"
@@ -95,7 +93,6 @@
                     data))))
 
 (defn log-mode [connection args]
-  (println args)
   (let [params (args :params)]
     (when (= (count params) 3)
       (let [[channel mode target] params]
@@ -113,7 +110,7 @@
                 (select-keys args [:command :user :nick :host :text])))
 
 (defn do-server [server]
-  (println server)
+  (pprint/pprint server)
   (let [connection (irc/connect (server :host) (server :port) (server :nick)
                                 :ssl? (server :ssl) :reconnect? true
                                 :real-name (server :real-name)

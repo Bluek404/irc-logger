@@ -3,7 +3,7 @@
     "host": "irc.freenode.net",
     "port": 6697,
     "ssl": true,
-    "real-name": "bot0x770d",
+    "real-name": "logger-bot",
     "nick": "Ox770d",
     "channels": [
       "#42!"
