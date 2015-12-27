@@ -138,7 +138,7 @@
 (defmethod process-line "QUIT" [{:keys [nick params] :as m} irc]
   ; 找到这个用户曾经在过的全部 channel
   (let [c (for [[k v] (@irc :channels)
-                :when (contains? (v :users) nick)]
+                :when (some #(= nick %) (v :users))]
             k)]
     ; 把这个用户从所有曾经在过的 channel 的在线列表里移除
     (dosync

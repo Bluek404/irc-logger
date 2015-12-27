@@ -58,7 +58,7 @@
         ; 找出这个用户所在的所有频道
         ; 因为已经改名了，所以使用新的名字查找
         channels (for [[k v] (@connection :channels)
-                       :when (contains? (v :users) new-nick)]
+                       :when (some #(= new-nick %) (v :users))]
                    k)]
     (doseq [channel channels]
       (jdbc/insert! db
