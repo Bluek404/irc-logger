@@ -65,3 +65,37 @@ body {
 .PRIVMSG .c15 {color: #E64A19;}
 .PRIVMSG .c16 {color: #5D4037;}
 .PRIVMSG .c17 {color: #455A64;}
+
+.white {color: #FFFFFF}
+.black {color: #212121}
+.blue {color: #2196F3}
+.green {color: #4CAF50}
+.red {color: #F44336}
+.brown {color: #795548}
+.purple {color: #9C27B0}
+.orange {color: #FF9800}
+.yellow {color: #FFEB3B}
+.lime {color: #CDDC39}
+.teal {color: #009688}
+.cyan {color: #00BCD4}
+.royal {color: #01579B}
+.pink {color: #E91E63}
+.grey {color: #9E9E9E}
+.silver {color: #E0E0E0}
+
+.b-white {background: #FFFFFF}
+.b-black {background: #212121}
+.b-blue {background: #2196F3}
+.b-green {background: #4CAF50}
+.b-red {background: #F44336}
+.b-brown {background: #795548}
+.b-purple {background: #9C27B0}
+.b-orange {background: #FF9800}
+.b-yellow {background: #FFEB3B}
+.b-lime {background: #CDDC39}
+.b-teal {background: #009688}
+.b-cyan {background: #00BCD4}
+.b-royal {background: #01579B}
+.b-pink {background: #E91E63}
+.b-grey {background: #9E9E9E}
+.b-silver {background: #E0E0E0}
