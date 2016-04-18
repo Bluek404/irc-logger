@@ -53,3 +53,10 @@
                                  (gen-table-name irc-server channel) limit offset))
      (reverse (jdbc/query db-spec (format "SELECT * FROM %s ORDER BY time DESC LIMIT %s"
                                           (gen-table-name irc-server channel) limit))))))
+
+(defn count-log [irc-server channel]
+  (-> (jdbc/query db-spec (format "SELECT COUNT(*) FROM %s"
+                                  (gen-table-name irc-server channel)))
+      first
+      first
+      second))

@@ -38,6 +38,12 @@
         result
         (recur (next l))))))
 
+(defn get-irc-server [server-host]
+  (find-first #(when (= (get % :host) server-host) %) @irc-list))
+
+(defn has-channel? [server channel]
+  (some #(= % channel) (server :channels)))
+
 (defn log [req]
   (let [params (req :params)
         server (params :server)
@@ -45,8 +51,8 @@
                (Integer. (params :page)))
         channel (str \# (params :channel))]
     (prn params)
-    (when-let [irc (find-first #(when (= (get % :host) server) %) @irc-list)]
-      (when (some #(= % channel) (irc :channels))
+    (when-let [irc (get-irc-server server)]
+      (when (has-channel? irc channel)
         (let [rows (db/query-log server channel page)]
           (when-not (empty? rows)
             {:status 200
@@ -79,8 +85,8 @@
         limit (Integer. (params :limit))
         offset (when (params :offset)
                  (Integer. (params :offset)))]
-    (when-let [irc (find-first #(when (= (get % :host) server) %) @irc-list)]
-      (when (some #(= % channel) (irc :channels))
+    (when-let [irc (get-irc-server server)]
+      (when (has-channel? irc channel)
         (if (<= limit 1000)
           {:status 200
            :headers {"Content-Type" "application/json; charset=utf-8"}
@@ -88,6 +94,16 @@
           {:status 403
            :headers {"Content-Type" "text/plain; charset=utf-8"}
            :body "Max LIMIT = 1000"})))))
+
+(defn count-log-api [req]
+  (let [params (req :params)
+        server (params :server)
+        channel (str \# (params :channel))]
+    (when-let [irc (get-irc-server server)]
+      (when (has-channel? irc channel)
+        {:status 200
+         :headers {"Content-Type" "text/plain; charset=utf-8"}
+         :body (str (db/count-log server channel))}))))
 
 (defn search [req]
   {:status 200
@@ -100,9 +116,11 @@
   (context "/log/:server/:channel" []
     (GET "/" [] log)
     (GET "/:page{[0-9]+}" [] log))
-  (context "/api/:server/:channel/:limit{[0-9]+}" []
-    (GET "/" [] api)
-    (GET "/:offset{[0-9]+}" [] api))
+  (context "/api/:server/:channel" []
+    (context "/:limit{[0-9]+}" []
+      (GET "/" [] api)
+      (GET "/:offset{[0-9]+}" [] api))
+    (GET "/count" [] count-log-api))
   (GET "/search" [] search)
   (route/resources "/")
   (route/not-found "<p>Page not found.</p>"))
