@@ -1,0 +1,28 @@
+body {
+    background: #151515;
+    color: white;
+}
+
+.log {
+    color: #5D5D5D;
+}
+
+.log .PRIVMSG {
+    color: white;
+}
+
+.log > div {
+    display: flex;
+}
+
+.log time {
+    padding-right: 10px;
+}
+
+.log .user {
+    width: 100px;
+    display: inline-block;
+    text-align: right;
+    overflow-x: hidden;
+    padding-right: 10px;
+}

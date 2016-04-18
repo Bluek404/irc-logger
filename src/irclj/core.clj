@@ -120,27 +120,16 @@
   (events/fire irc :raw-log :read line)
   (process/process-line (parser/parse line) irc))
 
-(defn- reconnect [irc port ssl? timeout]
-  (let [host (:network @irc)]
-    (prn "Reconnecting...")
-    (dosync
-      (alter irc assoc
-             :connection (connection/create-connection host port ssl?)
-             :ready? (promise)))
-    (connection/set-timeout irc timeout)
-    (connection/register-connection irc)))
-
 (defn connect
   "Connect to IRC. Connects in another thread and returns a big fat ref of
    data about the connection, you, and IRC in general."
   [host port nick &
-   {:keys [pass timeout real-name mode username callbacks ssl? reconnect?]
+   {:keys [pass timeout real-name mode username callbacks ssl?]
     :or {real-name "irclj", mode 0, ssl? false
          callbacks {:raw-log events/stdout-callback}}
     :as all}]
   (let [{:keys [in] :as connection} (connection/create-connection host port ssl?)
         irc (ref {:connection connection
-                  :reconnect? reconnect?
                   :shutdown? false
                   :prefixes {}
                   :pass pass
@@ -151,31 +140,23 @@
                   :init-mode mode
                   :network host
                   :ready? (promise)})]
-    (.start
-     (Thread.
-      (fn []
-        (try
-          (connection/set-timeout irc timeout)
-          (connection/register-connection irc)
-          (loop [lines (connection/safe-line-seq in)]
-            (if-let [line (first lines)]
-              (do (process irc line)
-                  (recur (rest lines)))
-              (if (:reconnect? @irc)
-                (do (reconnect irc port ssl? timeout)
-                    (.start (Thread. (fn [] (when (:ready? @irc)
-                                              (events/fire irc :on-reconnect)))))
-                    (recur (connection/safe-line-seq (get-in @irc [:connection :in]))))
-                (events/fire irc :on-shutdown))))
-          (catch Exception e
-            (deliver (:ready? @irc) false) ;; unblock the promise
-            (events/fire irc :on-exception e)
-            (throw e))))))
+    (future
+      (try
+        (connection/set-timeout irc timeout)
+        (connection/register-connection irc)
+        (loop [lines (connection/safe-line-seq in)]
+          (if-let [line (first lines)]
+            (do (process irc line)
+                (recur (rest lines)))
+            (events/fire irc :on-shutdown)))
+        (catch Exception e
+          (deliver (:ready? @irc) false) ;; unblock the promise
+          (events/fire irc :on-exception e)
+          (throw e))))
 
     irc))
 
 (defn kill
   "Close the socket associated with an IRC connection."
   [irc]
-  (dosync (alter irc assoc :reconnect? false))
   (.close (get-in @irc [:connection :socket])))

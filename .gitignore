@@ -11,3 +11,4 @@ pom.xml.asc
 .hg/
 /.idea
 irc-logger.iml
+database.db

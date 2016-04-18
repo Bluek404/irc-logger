@@ -87,25 +87,14 @@
 ;; We can't really recover from a nick-already-in-use error. Just throw an
 ;; exception.
 (defmethod process-line "433" [m irc]
-  (events/fire irc :433 m)
-  (throw (Exception. "Nick is already taken. Can't recover.")))
+  (events/fire irc :433 m))
+  ;(throw (Exception. "Nick is already taken. Can't recover.")))
 
 ;; ### Wordy Responses
 
 ;; PONG!
 (defmethod process-line "PING" [m irc]
   (connection/write-irc-line irc (.replace (:raw m) "PING" "PONG")))
-
-(defn- update-nicks [users old-nick new-nick]
-  (when users
-    (let [old-data (users old-nick)]
-      (assoc (dissoc users old-nick) new-nick old-data))))
-
-(defn- update-channels [channels old-nick new-nick]
-  (into {}
-        (for [[channel data] channels]
-          [channel
-           (update-in data [:users] update-nicks old-nick new-nick)])))
 
 ;; We need to process this so that we can reflect NICK changes. This is
 ;; a fairly complicated process. NICK messages give you no information
@@ -115,15 +104,23 @@
 ;; in each channel. Since we don't know *which* channels, we have to look
 ;; at all of them.
 (defmethod process-line "NICK" [{:keys [nick params] :as m} irc]
-  (let [new-nick (first params)]
-    (dosync
-     (alter irc
-            (fn [old]
-              (let [old (if (= (:nick @irc) nick)
-                          (assoc old :nick new-nick)
-                          old)]
-                (update-in old [:channels] update-channels nick new-nick))))))
-  (events/fire irc :nick m))
+  (let [new-nick (first params)
+        [c r] (loop [channels (@irc :channels), c [], r {}]
+                (if-not (empty? channels)
+                  (let [channel (first channels)
+                        c-name (first channel)
+                        c-data (second channel)
+                        c-users (c-data :users)]
+                    (if-let [user-data (get c-users nick)]
+                      (let [c-users (dissoc c-users nick)
+                            c-users (assoc c-users new-nick user-data)
+                            c-data (assoc c-data :users c-users)
+                            r (assoc r c-name c-data)]
+                        (recur (next channels) (conj c c-name) r))
+                      (recur (next channels) c (assoc r c-name c-data))))
+                  [c r]))]
+    (dosync (ref-set irc (assoc @irc :channels r)))
+    (events/fire irc :nick (assoc m :channels c))))
 
 (defmethod process-line "JOIN" [{:keys [nick params] :as m} irc]
   (dosync
@@ -136,15 +133,21 @@
   (events/fire irc :part m))
 
 (defmethod process-line "QUIT" [{:keys [nick params] :as m} irc]
-  ; 找到这个用户曾经在过的全部 channel
-  (let [c (for [[k v] (@irc :channels)
-                :when (some #(= nick %) (v :users))]
-            k)]
-    ; 把这个用户从所有曾经在过的 channel 的在线列表里移除
-    (dosync
-      (alter irc (fn [irc]
-                   (reduce #(update-in %1 [:channels %2 :users] dissoc nick)
-                           irc c))))
+  (let [[c r] (loop [channels (@irc :channels), c [], r {}]
+                (if-not (empty? channels)
+                  (let [channel (first channels)
+                        c-name (first channel)
+                        c-data (second channel)
+                        c-users (c-data :users)]
+                    (if (get c-users nick)
+                      (let [c-users (dissoc c-users nick)
+                            c-data (assoc c-data :users c-users)
+                            r (assoc r c-name c-data)]
+                        (recur (next channels) (conj c c-name) r))
+                      (recur (next channels) c (assoc r c-name c-data))))
+                  [c r]))]
+    (dosync (ref-set irc (assoc @irc :channels r)))
+    (prn (@irc :channels))
     (events/fire irc :quit (assoc m :channels c))))
 
 ;; Modes are complicated. Parsing them and trying to update a bunch of data properly
