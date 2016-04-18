@@ -10,12 +10,12 @@
 
 (def irc-list (atom []))
 
-(defn frame [title body]
+(defn frame [title & body]
   (html [:html
          [:head
           [:title title]
           [:link {:rel "stylesheet" :href "/css/styles.css"}]]
-         [:body body]]))
+         (apply vector :body body)]))
 
 (defn index [req]
   {:status 200
@@ -64,7 +64,8 @@
                                    [:time (row :time)]
                                    [:a.user {:title (row :user)} (row :nick)]
                                    [:a.text (row :text)]])
-                                rows)])}))))))
+                                rows)]
+                          [:script {:src "/js/script.js"}])}))))))
 
 (defn encode-log [log]
   (let [builder (StringBuilder.)]

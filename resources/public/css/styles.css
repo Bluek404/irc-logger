@@ -26,3 +26,41 @@ body {
     overflow-x: hidden;
     padding-right: 10px;
 }
+
+.c0 {color: #B71C1C;}
+.c1 {color: #880E4F;}
+.c2 {color: #4A148C;}
+.c3 {color: #311B92;}
+.c4 {color: #1A237E;}
+.c5 {color: #0D47A1;}
+.c6 {color: #01579B;}
+.c7 {color: #006064;}
+.c8 {color: #004D40;}
+.c9 {color: #1B5E20;}
+.c10 {color: #33691E;}
+.c11 {color: #827717;}
+.c12 {color: #F57F17;}
+.c13 {color: #FF6F00;}
+.c14 {color: #E65100;}
+.c15 {color: #BF360C;}
+.c16 {color: #3E2723;}
+.c17 {color: #263238;}
+
+.PRIVMSG .c0 {color: #D32F2F;}
+.PRIVMSG .c1 {color: #C2185B;}
+.PRIVMSG .c2 {color: #7B1FA2;}
+.PRIVMSG .c3 {color: #512DA8;}
+.PRIVMSG .c4 {color: #303F9F;}
+.PRIVMSG .c5 {color: #1976D2;}
+.PRIVMSG .c6 {color: #0288D1;}
+.PRIVMSG .c7 {color: #0097A7;}
+.PRIVMSG .c8 {color: #00796B;}
+.PRIVMSG .c9 {color: #388E3C;}
+.PRIVMSG .c10 {color: #689F38;}
+.PRIVMSG .c11 {color: #AFB42B;}
+.PRIVMSG .c12 {color: #FBC02D;}
+.PRIVMSG .c13 {color: #FFA000;}
+.PRIVMSG .c14 {color: #F57C00;}
+.PRIVMSG .c15 {color: #E64A19;}
+.PRIVMSG .c16 {color: #5D4037;}
+.PRIVMSG .c17 {color: #455A64;}

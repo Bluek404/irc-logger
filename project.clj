@@ -15,13 +15,15 @@
 
                  ; cljs
                  [org.clojure/clojurescript "1.8.40"]
-                 [hiccups "0.3.0"]]
+                 [hiccups "0.3.0"]
+                 [prismatic/dommy "1.1.0"]]
 
   :plugins [[lein-cljsbuild "1.1.3"]]
   :hooks [leiningen.cljsbuild]
   :cljsbuild {:builds
               [{:source-paths ["src-cljs"]
                 :compiler {:output-to "resources/public/js/script.js"
+                           :main irc-logger.core
                            :optimizations :advanced
                            :pretty-print false}}]}
 
