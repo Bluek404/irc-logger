@@ -13,6 +13,7 @@ body {
 
 .log > div {
     display: flex;
+    white-space: nowrap;
 }
 
 .log time {
@@ -21,7 +22,7 @@ body {
 
 .log .user {
     width: 100px;
-    display: inline-block;
+    display: inline-table;
     text-align: right;
     overflow-x: hidden;
     padding-right: 10px;

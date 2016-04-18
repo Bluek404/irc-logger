@@ -44,16 +44,25 @@
 (defn has-channel? [server channel]
   (some #(= % channel) (server :channels)))
 
+(defn get-last-page-offset [server channel limit]
+  (let [log-num (db/count-log server channel)
+        last-page-log-num (rem log-num limit)]
+    (if (not= last-page-log-num 0)
+      (- log-num last-page-log-num)
+      (- log-num limit))))
+
 (defn log [req]
   (let [params (req :params)
         server (params :server)
-        page (when (params :page)
-               (Integer. (params :page)))
         channel (str \# (params :channel))]
     (prn params)
     (when-let [irc (get-irc-server server)]
       (when (has-channel? irc channel)
-        (let [rows (db/query-log server channel page)]
+        (let [limit 500
+              offset (if (params :page)
+                       (* (dec (Integer. (params :page))) limit)
+                       (get-last-page-offset server channel limit))
+              rows (db/query-log server channel limit offset)]
           (when-not (empty? rows)
             {:status 200
              :headers {"Content-Type" "text/html; charset=utf-8"}
@@ -84,8 +93,9 @@
         server (params :server)
         channel (str \# (params :channel))
         limit (Integer. (params :limit))
-        offset (when (params :offset)
-                 (Integer. (params :offset)))]
+        offset (if (params :page)
+                 (* (dec (Integer. (params :page))) limit)
+                 (get-last-page-offset server channel limit))]
     (when-let [irc (get-irc-server server)]
       (when (has-channel? irc channel)
         (if (<= limit 1000)
