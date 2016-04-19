@@ -5,7 +5,8 @@
             [compojure.core :refer [defroutes GET POST context]]
             [org.httpkit.server :refer [run-server]]
             [clojure.string :as string]
-            [irc-logger.db :as db])
+            [irc-logger.db :as db]
+            [cemerick.url :refer [url-encode]])
   (:import [java.lang StringBuilder]))
 
 (def irc-list (atom []))
@@ -26,7 +27,7 @@
                         [:ul
                          (map (fn [c]
                                 [:li
-                                 [:a {:href (str "/log/" (l :host) \/ (apply str (next c)))}
+                                 [:a {:href (str "/log/" (l :host) \/ (url-encode c))}
                                   c]])
                               (l :channels))]])
                      @irc-list))})
@@ -54,7 +55,7 @@
 (defn log [req]
   (let [params (req :params)
         server (params :server)
-        channel (str \# (params :channel))]
+        channel (params :channel)]
     (prn params)
     (when-let [irc (get-irc-server server)]
       (when (has-channel? irc channel)
@@ -91,7 +92,7 @@
 (defn api [req]
   (let [params (req :params)
         server (params :server)
-        channel (str \# (params :channel))
+        channel (params :channel)
         limit (Integer. (params :limit))
         offset (if (params :page)
                  (* (dec (Integer. (params :page))) limit)
@@ -109,7 +110,7 @@
 (defn count-log-api [req]
   (let [params (req :params)
         server (params :server)
-        channel (str \# (params :channel))]
+        channel (params :channel)]
     (when-let [irc (get-irc-server server)]
       (when (has-channel? irc channel)
         {:status 200

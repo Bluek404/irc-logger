@@ -12,6 +12,7 @@
                  [compojure "1.5.0"]
                  [http-kit "2.1.18"]
                  [javax.servlet/servlet-api "2.5"]
+                 [com.cemerick/url "0.1.1"]
 
                  ; cljs
                  [org.clojure/clojurescript "1.8.40"]
