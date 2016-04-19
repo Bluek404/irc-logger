@@ -33,6 +33,10 @@ body {
     max-height: 100px;
 }
 
+.pager a {
+    padding: 0 5px;
+}
+
 .c0 {color: #B71C1C;}
 .c1 {color: #880E4F;}
 .c2 {color: #4A148C;}

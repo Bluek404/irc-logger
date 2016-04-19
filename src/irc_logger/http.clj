@@ -60,10 +60,14 @@
     (when-let [irc (get-irc-server server)]
       (when (has-channel? irc channel)
         (let [limit 500
-              offset (if (params :page)
-                       (* (dec (Integer. (params :page))) limit)
-                       (get-last-page-offset server channel limit))
+              last-page-offset (get-last-page-offset server channel limit)
+              last-page (inc (/ last-page-offset limit))
+              page (if (params :page)
+                     (Integer. (params :page))
+                     last-page)
+              offset (* (dec page) limit)
               rows (db/query-log server channel limit offset)]
+          (prn last-page-offset last-page offset page)
           (when-not (empty? rows)
             {:status 200
              :headers {"Content-Type" "text/html; charset=utf-8"}
@@ -75,6 +79,16 @@
                                    [:a.user {:title (row :user)} (row :nick)]
                                    [:a.text (row :text)]])
                                 rows)]
+                          [:div.pager
+                           (map (fn [x] [:a (when (not= x page)
+                                              {:href (format "/log/%s/%s/%s" server (url-encode channel) x)})
+                                         x])
+                                (range (if (< (- page 7) 1)
+                                         1
+                                         (- page 7))
+                                       (if (> (+ page 7) last-page)
+                                         (inc last-page)
+                                         (inc (+ page 7)))))]
                           [:script {:src "/js/script.js"}])}))))))
 
 (defn encode-log [log]

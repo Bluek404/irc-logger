@@ -52,7 +52,20 @@
           \u0016 (recur (next t) tail r) ; TODO
           \u000f (recur (next t) "" (str r tail))
           (recur (next t) tail (str r (first t))))
-      (str r tail))))
+        (str r tail))))
+
+(defn parse-url [text]
+  (string/replace text
+                  #"https?://[\w-\.~!\*'\(\);:@&=+$,\/?%#\[\]]*"
+                  #(str "<a href=\"" % "\">" % "</a>")))
+
+(defn parse-image [text]
+  (let [image-list (->> text
+                        (re-seq #"href=\"(.+\.(?:png|jpg|svg|gif|bmp|jpeg|webp))\"")
+                        (map #(second %))
+                        (map #(str "<a href=\"" % "\"><img src=\"" % "\"/></a>"))
+                        (apply str))]
+    (str text "<br/>" image-list)))
 
 (defn main-log []
   (let [name-el (sel :.user)
@@ -64,11 +77,8 @@
       (let [text (.-innerText text-e)
             parsed (-> text
                        (parse-text)
-                       (string/replace #"https?://[\w-\.~!\*'\(\);:@&=+$,\/?%#\[\]]*"
-                                       #(str "<a href=\"" % "\">" %
-                                             (when (re-find #"\.(?:png|jpg|svg|gif|bmp|jpeg|webp)$" %)
-                                               (str "<img src=\"" % "\"/>"))
-                                             "</a>")))]
+                       (parse-url)
+                       (parse-image))]
         (set! (.-innerHTML text-e) parsed)))))
 
 (let [path (-> js/window .-location .-pathname)]
