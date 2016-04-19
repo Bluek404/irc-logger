@@ -9,6 +9,7 @@ body {
 
 .log .PRIVMSG {
     color: white;
+    align-items: baseline;
 }
 
 .log > div {
@@ -26,6 +27,10 @@ body {
     text-align: right;
     overflow-x: hidden;
     padding-right: 10px;
+}
+
+.PRIVMSG img {
+    max-height: 100px;
 }
 
 .c0 {color: #B71C1C;}

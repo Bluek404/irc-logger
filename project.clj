@@ -26,7 +26,14 @@
                 :compiler {:output-to "resources/public/js/script.js"
                            :main irc-logger.core
                            :optimizations :advanced
-                           :pretty-print false}}]}
+                           :pretty-print false}}
+               {:id "dev"
+                :source-paths ["src-cljs"]
+                :compiler {
+                           :output-to "resources/public/js/script.js"
+                           :main irc-logger.core
+                           :optimizations :whitespace
+                           :pretty-print true}}]}
 
   :main ^:skip-aot irc-logger.core
   :target-path "target/%s"

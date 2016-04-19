@@ -61,8 +61,15 @@
       (let [name (.-innerText name-e)]
         (dommy/add-class! name-e (get-color-class name))))
     (doseq [text-e text-el]
-      (let [text (.-innerText text-e)]
-        (set! (.-innerHTML text-e) (parse-text text))))))
+      (let [text (.-innerText text-e)
+            parsed (-> text
+                       (parse-text)
+                       (string/replace #"https?://[\w-\.~!\*'\(\);:@&=+$,\/?%#\[\]]*"
+                                       #(str "<a href=\"" % "\">" %
+                                             (when (re-find #"\.(?:png|jpg|svg|gif|bmp|jpeg|webp)$" %)
+                                               (str "<img src=\"" % "\"/>"))
+                                             "</a>")))]
+        (set! (.-innerHTML text-e) parsed)))))
 
 (let [path (-> js/window .-location .-pathname)]
   (cond
