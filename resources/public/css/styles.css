@@ -3,6 +3,10 @@ body {
     color: white;
 }
 
+p.text {
+    margin: 0;
+}
+
 .log {
     color: #5D5D5D;
 }
@@ -35,6 +39,10 @@ body {
 
 .pager a {
     padding: 0 5px;
+}
+
+#irc-list {
+    display: none;
 }
 
 .c0 {color: #B71C1C;}

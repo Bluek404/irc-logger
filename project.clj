@@ -17,7 +17,8 @@
                  ; cljs
                  [org.clojure/clojurescript "1.8.40"]
                  [hiccups "0.3.0"]
-                 [prismatic/dommy "1.1.0"]]
+                 [prismatic/dommy "1.1.0"]
+                 [cljs-http "0.1.40"]]
 
   :plugins [[lein-cljsbuild "1.1.3"]]
   :hooks [leiningen.cljsbuild]

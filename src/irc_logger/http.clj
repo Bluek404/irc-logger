@@ -77,7 +77,7 @@
                                   [:div {:class (row :command)}
                                    [:time (row :time)]
                                    [:a.user {:title (row :user)} (row :nick)]
-                                   [:a.text (row :text)]])
+                                   [:p.text (row :text)]])
                                 rows)]
                           [:div.pager
                            (map (fn [x] [:a (when (not= x page)
@@ -108,14 +108,14 @@
         server (params :server)
         channel (params :channel)
         limit (Integer. (params :limit))
-        offset (if (params :page)
-                 (* (dec (Integer. (params :page))) limit)
+        offset (if (params :offset)
+                 (Integer. (params :offset))
                  (get-last-page-offset server channel limit))]
     (when-let [irc (get-irc-server server)]
       (when (has-channel? irc channel)
         (if (<= limit 1000)
           {:status 200
-           :headers {"Content-Type" "application/json; charset=utf-8"}
+           :headers {"Content-Type" "text/plain; charset=utf-8"}
            :body (encode-log (db/query-log server channel limit offset))}
           {:status 403
            :headers {"Content-Type" "text/plain; charset=utf-8"}
@@ -135,6 +135,19 @@
   {:status 200
    :headers {"Content-Type" "text/html; charset=utf-8"}
    :body (frame "SEARCH"
+                [:div#irc-list (->> @irc-list
+                                    (map #(apply vector (% :host) (% :channels)))
+                                    (map #(string/join \space %))
+                                    (string/join \n))]
+                [:div.search-box
+                 [:select#server-select
+                  [:option "SERVER"]]
+                 [:select#channel-select
+                  [:option "CHANNEL"]]
+                 [:input#search]
+                 [:button#search-button "搜索"]
+                 [:a#msg "请输入正则进行搜索"]]
+                [:div#search-result.log]
                 [:script {:src "/js/script.js"}])})
 
 (defroutes all-routes
