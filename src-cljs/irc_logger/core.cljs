@@ -79,7 +79,7 @@
       (let [name (dommy/text name-e)]
         (dommy/add-class! name-e (get-color-class name))))
     (doseq [text-e text-el]
-      (let [text (dommy/text text-e)
+      (let [text (dommy/html text-e)
             parsed (-> text
                        (parse-text)
                        (parse-url)
@@ -122,7 +122,7 @@
 (defn parse-log-to-html [log]
   (html (map (fn [row]
                [:div {:class (row :command)}
-                [:time (row :time)]
+                [:a {:href (row :link)} [:time (row :time)]]
                 [:a {:title (row :user)
                      :class (str "user "(get-color-class (row :nick)))}
                  (row :nick)]
@@ -158,44 +158,49 @@
                                                             (html (map (fn [c] [:option c]) channels))))))
     ((.-onselect server-select-e))
 
-    (dommy/listen! search-button-e :click
-                   (fn []
-                     (let [search-text (dommy/value search-e)
-                           reg (try (re-pattern search-text)
-                                    (catch :default e
-                                      (dommy/set-text! msg-e (str "正则解析错误: " e))
-                                      (throw e)))]
-                       (if (= search-text "")
-                         (dommy/set-text! msg-e "正则不能为空")
-                         (let [server-host (get-selected-str server-select-e)
-                               channel (get-selected-str channel-select-e)
-                               log-num (http/get (str (-> js/window .-location .-origin)
-                                                      "/api/" server-host "/" (encode-uri channel) "/count"))
-                               api (str (-> js/window .-location .-origin)
-                                        "/api/" server-host "/" (encode-uri channel) "/")]
-                           (go (let [log-num (js/parseInt ((<! log-num) :body))
-                                     limit 500
-                                     search-fn (fn search-fn [offset]
-                                                 (if-not (> offset log-num)
-                                                   (let [c (http/get (str api limit "/" offset))] ; FIXME
-                                                     (prn (str api limit "/" offset))
-                                                     (go (do (dommy/set-text!
-                                                              msg-e (str "共有 " log-num " 条记录，"
-                                                                         "正在搜索 " offset "-"
-                                                                         (if (> (+ offset limit) (inc log-num))
-                                                                           (inc log-num)
-                                                                           (+ offset limit))))
-                                                             (let [r (<! c)
-                                                                   body (r :body)
-                                                                   log (parse-text-log body)
-                                                                   result (filter #(re-find reg (% :text)) log)
-                                                                   html (parse-log-to-html result)]
-                                                               (dommy/set-html! search-result-e
-                                                                                (str (dommy/html search-result-e) html))
-                                                               (search-fn (+ offset limit))))))
-                                                   (dommy/set-text! msg-e (str "全部 " log-num " 条记录已搜索完毕"))))]
-                                 (dommy/set-html! search-result-e "")
-                                 (search-fn 0))))))))))
+    (defn search-button-on-click []
+      (let [search-text (dommy/value search-e)
+            reg (try (re-pattern search-text)
+                     (catch :default e
+                       (dommy/set-text! msg-e (str "正则解析错误: " e))
+                       (throw e)))]
+        (if (= search-text "")
+          (dommy/set-text! msg-e "正则不能为空")
+          (let [server-host (get-selected-str server-select-e)
+                channel (get-selected-str channel-select-e)
+                log-num (http/get (str (-> js/window .-location .-origin)
+                                       "/api/" server-host "/" (encode-uri channel) "/count"))
+                api-link (str (-> js/window .-location .-origin)
+                              "/api/" server-host "/" (encode-uri channel) "/")
+                log-link (str (-> js/window .-location .-origin)
+                              "/log/" server-host "/" (encode-uri channel) "/")
+                limit 500]
+            (go (let [log-num (js/parseInt ((<! log-num) :body))]
+
+                  (defn search-fn [offset]
+                    (if-not (> offset log-num)
+                      (let [c (http/get (str api-link limit "/" offset))
+                            page (inc (/ offset limit))]
+                        (dommy/set-text! msg-e (str "共有 " log-num " 条记录，"
+                                                    "正在搜索 " offset "-"
+                                                    (if (> (+ offset limit) (inc log-num))
+                                                      (inc log-num)
+                                                      (+ offset limit))))
+                        (go (let [r (<! c)
+                                  body (r :body)
+                                  log (->> (parse-text-log body)
+                                           (map #(assoc % :link (str log-link page))))
+                                  result (filter #(re-find reg (% :text)) log)
+                                  html (parse-log-to-html result)]
+                              (dommy/set-html! search-result-e
+                                               (str (dommy/html search-result-e) html))
+                              (search-fn (+ offset limit)))))
+                      (dommy/set-text! msg-e (str "全部 " log-num " 条记录已搜索完毕"))))
+
+                  (dommy/set-html! search-result-e "")
+                  (search-fn 0)))))))
+
+    (dommy/listen! search-button-e :click search-button-on-click)))
 
 (let [path (-> js/window .-location .-pathname)]
   (cond
