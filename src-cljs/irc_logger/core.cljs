@@ -113,6 +113,12 @@
                         :nick (nth line 5)
                         :text (nth line 6)}))))
 
+(defn html-escape [text]
+  (string/escape text {\< "&lt;"
+                       \> "&gt;"
+                       \& "&amp;"
+                       \" "&quot;"}))
+
 (defn parse-log-to-html [log]
   (html (map (fn [row]
                [:div {:class (row :command)}
@@ -122,10 +128,11 @@
                  (row :nick)]
                 [:p.text (if true; (= (row :coammand) "PRIVMSG")
                            (-> (row :text)
+                               (html-escape)
                                (parse-text)
                                (parse-url)
                                (parse-image))
-                           (row :text))]])
+                           (html-escape (row :text)))]])
              log)))
 
 (defn main-search []

@@ -52,11 +52,16 @@
       (- log-num last-page-log-num)
       (- log-num limit))))
 
+(defn html-escape [text]
+  (string/escape text {\< "&lt;"
+                       \> "&gt;"
+                       \& "&amp;"
+                       \" "&quot;"}))
+
 (defn log [req]
   (let [params (req :params)
         server (params :server)
         channel (params :channel)]
-    (prn params)
     (when-let [irc (get-irc-server server)]
       (when (has-channel? irc channel)
         (let [limit 500
@@ -67,7 +72,6 @@
                      last-page)
               offset (* (dec page) limit)
               rows (db/query-log server channel limit offset)]
-          (prn last-page-offset last-page offset page)
           (when-not (empty? rows)
             {:status 200
              :headers {"Content-Type" "text/html; charset=utf-8"}
@@ -77,7 +81,7 @@
                                   [:div {:class (row :command)}
                                    [:time (row :time)]
                                    [:a.user {:title (row :user)} (row :nick)]
-                                   [:p.text (row :text)]])
+                                   [:p.text (html-escape (row :text))]])
                                 rows)]
                           [:div.pager
                            (map (fn [x] [:a (when (not= x page)
