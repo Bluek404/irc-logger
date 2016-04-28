@@ -72,12 +72,39 @@
                         (apply str))]
     (str text "<br/>" image-list)))
 
+(defn append-zero [i]
+  (if (< i 10)
+    (str \0 i)
+    i))
+
+(defn format-time [t]
+  (let [year (.getFullYear t)
+        month (inc (.getMonth t))
+        date (.getDate t)
+        hours (.getHours t)
+        minutes (.getMinutes t)
+        seconds (.getSeconds t)]
+    (str year \- (append-zero month) \- (append-zero date) \space
+         (append-zero hours) \: (append-zero minutes) \: (append-zero seconds))))
+
+(defn to-local-time [time]
+  (let [utc-time (->> (str time " UTC")
+                      (new js/Date))]
+    (format-time utc-time)))
+
 (defn main-log []
   (let [name-el (sel :.user)
+        time-el (sel :time)
         text-el (sel [:.PRIVMSG :.text])]
     (doseq [name-e name-el]
       (let [name (dommy/text name-e)]
         (dommy/add-class! name-e (get-color-class name))))
+    (prn (.getTimezoneOffset (new js/Date)))
+    (doseq [time-e time-el]
+      (let [utc-time (dommy/text time-e)
+            local-time (to-local-time utc-time)]
+        (prn utc-time local-time)
+        (dommy/set-text! time-e local-time)))
     (doseq [text-e text-el]
       (let [text (dommy/html text-e)
             parsed (-> text
@@ -122,7 +149,7 @@
 (defn parse-log-to-html [log]
   (html (map (fn [row]
                [:div {:class (row :command)}
-                [:a {:href (row :link)} [:time (row :time)]]
+                [:a {:href (row :link)} [:time (to-local-time (row :time))]]
                 [:a {:title (row :user)
                      :class (str "user "(get-color-class (row :nick)))}
                  (row :nick)]
