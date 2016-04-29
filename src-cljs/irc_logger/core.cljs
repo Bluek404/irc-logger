@@ -17,19 +17,14 @@
     (mod s 18)
     (str "c" s)))
 
-; TODO
 (defn parse-integer [text]
   (loop [t text, r ""]
-    (if-not (empty? t)
-      (let [c (first t)]
-        (if (js/isNaN (js/parseInt c))
-          (if (not= r "")
-            [(js/parseInt r) t]
-            [nil t])
-          (recur (next t) (str r c))))
-      (if (not= r "")
-        [(js/parseInt r) t]
-        [nil t]))))
+    (let [int (js/parseInt (first t))]
+      (if-not (js/isNaN int)
+        (recur (next t) (str r int))
+        (if (not= r "")
+          [(js/parseInt r) t]
+          [nil t])))))
 
 (def colors ["white" "black" "blue" "green" "red" "brown"
              "purple" "orange" "yellow" "lime" "teal" "cyan"
