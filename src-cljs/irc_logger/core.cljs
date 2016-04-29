@@ -95,7 +95,7 @@
 (defn main-log []
   (let [name-el (sel :.user)
         time-el (sel :time)
-        text-el (sel [:.PRIVMSG :.text])]
+        text-el (sel :.text)]
     (doseq [name-e name-el]
       (let [name (dommy/text name-e)]
         (dommy/add-class! name-e (get-color-class name))))
@@ -153,13 +153,11 @@
                 [:a {:title (row :user)
                      :class (str "user "(get-color-class (row :nick)))}
                  (row :nick)]
-                [:p.text (if true; (= (row :coammand) "PRIVMSG")
-                           (-> (row :text)
-                               (html-escape)
-                               (parse-text)
-                               (parse-url)
-                               (parse-image))
-                           (html-escape (row :text)))]])
+                [:p.text (-> (row :text)
+                             (html-escape)
+                             (parse-text)
+                             (parse-url)
+                             (parse-image))]])
              log)))
 
 (defn main-search []
